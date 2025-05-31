@@ -1,3 +1,6 @@
+/**
+ * Flexible Deno logging library.
+ */
 import { LogWriter } from "./writer.ts";
 import { addGauge, removeGauge } from "./console.ts";
 import { newContext, TracingContext } from "./context.ts";
