@@ -5,10 +5,11 @@ import { type Logger, namedLogger, rootLogger } from "./logger.ts";
 import { timingMark } from "./perf.ts";
 import { type ProgressBar, progressBar } from "./progress.ts";
 import { type LogOptions, setupLogging } from "./setup.ts";
-import type { LogEngine } from "./engine.ts";
+import { type LogEngine, logEngine } from "./engine.ts";
 
 export {
   addGauge,
+  logEngine,
   namedLogger,
   newContext,
   progressBar,
