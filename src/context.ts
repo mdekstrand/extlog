@@ -1,6 +1,7 @@
 import { crypto } from "@std/crypto";
 import { encodeBase32 } from "@std/encoding";
-import { encodeUtf8 } from "../util/encoding.ts";
+
+const UTF8 = new TextEncoder();
 
 /**
  * Create a new tracing context.
@@ -9,7 +10,7 @@ import { encodeUtf8 } from "../util/encoding.ts";
 export function newContext(key?: string): TracingContext {
   let bytes;
   if (key) {
-    let kb = encodeUtf8(key);
+    let kb = UTF8.encode(key);
     bytes = crypto.subtle.digestSync("FNV64A", kb);
   } else {
     bytes = new Uint8Array(8);
