@@ -1,4 +1,4 @@
-import { formatString } from "../util/format.ts";
+import { formatString } from "./format.ts";
 import { LogLevel } from "./level.ts";
 
 export type LogLabels = {
