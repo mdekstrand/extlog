@@ -5,7 +5,8 @@
   "exports": {
     ".": "./src/mod.ts",
     "./gauge": "./src/gauge.ts",
-    "./meter": "./src/meter.ts"
+    "./meter": "./src/meter.ts",
+    "./performance": "./src/perf.ts"
   },
   "imports": {
     "@mary/events": "jsr:@mary/events@^0.2.0",
