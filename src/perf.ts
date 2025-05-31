@@ -17,7 +17,7 @@ export class PerfMark {
   }
 }
 
-export function timingMark(name: string, detail?: Record<string, unknown>) {
+export function timingMark(name: string, detail?: Record<string, unknown>): PerfMark {
   performance.mark(`start:${name}`);
   if (detail?.context && detail.context instanceof TracingContext) {
     detail.context = detail.context.tag;
