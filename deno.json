@@ -9,6 +9,7 @@
   },
   "imports": {
     "@mary/events": "jsr:@mary/events@^0.2.0",
+    "@mdekstrand/streaming-lz4": "jsr:@mdekstrand/streaming-lz4@^0.2.0-alpha2",
     "@std/assert": "jsr:@std/assert@^1.0.13",
     "@std/crypto": "jsr:@std/crypto@^1.0.5",
     "@std/encoding": "jsr:@std/encoding@^1.0.10",

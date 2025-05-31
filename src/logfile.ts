@@ -3,7 +3,6 @@ import { Closer, writeAllSync, WriterSync } from "@std/io";
 import { parse as parsePath } from "@std/path/parse";
 
 import { LZ4EncoderStream } from "@mdekstrand/streaming-lz4";
-import { encodeUtf8 } from "../util/encoding.ts";
 import type { LogWriter } from "./backend.ts";
 import { levels, LogLevel, wantedAtOutputLevel } from "./level.ts";
 import { formattedMessage, LogRecord } from "./record.ts";
@@ -36,6 +35,8 @@ export function formatRecord(record: LogRecord): LogFileEntry {
 }
 
 export class FileLogWriter implements LogWriter {
+  #utf8: TextEncoder = new TextEncoder();
+
   file: WriterSync & Closer;
   level: LogLevel;
   proc?: Deno.ChildProcess;
@@ -73,6 +74,6 @@ export class FileLogWriter implements LogWriter {
   writeRecord(record: LogRecord): void {
     if (!wantedAtOutputLevel(record.level, this.level)) return;
     let entry = formatRecord(record);
-    writeAllSync(this.file, encodeUtf8(JSON.stringify(entry) + "\n"));
+    writeAllSync(this.file, this.#utf8.encode(JSON.stringify(entry) + "\n"));
   }
 }

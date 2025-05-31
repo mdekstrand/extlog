@@ -2,6 +2,7 @@
   "version": "5",
   "specifiers": {
     "jsr:@mary/events@0.2": "0.2.0",
+    "jsr:@mdekstrand/streaming-lz4@~0.2.0-alpha2": "0.2.0-alpha2",
     "jsr:@std/assert@^1.0.13": "1.0.13",
     "jsr:@std/bytes@^1.0.5": "1.0.6",
     "jsr:@std/crypto@^1.0.5": "1.0.5",
@@ -14,6 +15,12 @@
   "jsr": {
     "@mary/events@0.2.0": {
       "integrity": "39fd9f4022bfb3bda038655de1d95c7e4b3eee0f99128e822ab42afefb12c4f1"
+    },
+    "@mdekstrand/streaming-lz4@0.2.0-alpha2": {
+      "integrity": "f0cee38c90f247a9e4c0b6cd8ec55e9d02f2d52b6d746f4d3c497cc7c5138a98",
+      "dependencies": [
+        "jsr:@std/io"
+      ]
     },
     "@std/assert@1.0.13": {
       "integrity": "ae0d31e41919b12c656c742b22522c32fb26ed0cba32975cb0de2a273cb68b29",
@@ -49,6 +56,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@mary/events@0.2",
+      "jsr:@mdekstrand/streaming-lz4@~0.2.0-alpha2",
       "jsr:@std/assert@^1.0.13",
       "jsr:@std/crypto@^1.0.5",
       "jsr:@std/encoding@^1.0.10",
