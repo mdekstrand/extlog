@@ -11,6 +11,9 @@ import { rootLogger } from "./logger.ts";
 import { MeterBar } from "./meter.ts";
 import { colorByName, type Style, type TermColorName } from "./style.ts";
 
+/**
+ * Options for setting up progress bars.
+ */
 export type ProgressOptions = {
   label: string;
   total?: number;
@@ -18,7 +21,8 @@ export type ProgressOptions = {
 };
 
 /**
- * Progress bar to report progress in the output.
+ * Progress bar to report progress in the output.  Progress bars can be added as
+ * gauges to the console output.
  */
 export class ProgressBar extends Gauge {
   label: string;
@@ -26,6 +30,10 @@ export class ProgressBar extends Gauge {
   color: (s: string) => string;
   completed: number = 0;
 
+  /**
+   * Construct a new progress bar.
+   * @param opts The progress bar options.
+   */
   constructor(opts: ProgressOptions) {
     super();
     this.label = opts.label;
@@ -39,12 +47,20 @@ export class ProgressBar extends Gauge {
     }
   }
 
-  updateTotal(n: number = 1) {
+  /**
+   * Add to the progress bar's total.
+   * @param n The number to add to the total.
+   */
+  addToTotal(n: number = 1) {
     this.total += n;
     this.emit("refresh");
   }
 
-  update(n: number = 1) {
+  /**
+   * Update the progress bar by advancing its number completed.
+   * @param n The number to advance.
+   */
+  advance(n: number = 1) {
     if (this.completed < 0) return;
 
     this.completed += n;
@@ -58,6 +74,9 @@ export class ProgressBar extends Gauge {
     this.emit("refresh");
   }
 
+  /**
+   * Finish the progress bar, usually removing it from the console.
+   */
   finish() {
     if (this.completed >= 0) {
       this.completed = -1;
@@ -69,6 +88,9 @@ export class ProgressBar extends Gauge {
     this.finish();
   }
 
+  /**
+   * Render the progress bar for the console (see {@link Gauge}).
+   */
   render(size: number): string {
     let pfx = this.label + ": ";
     let pfxLen = stripAnsiCode(pfx).length;
@@ -81,6 +103,12 @@ export class ProgressBar extends Gauge {
   }
 }
 
+/**
+ * Create and register a progress bar.
+ *
+ * @param opts The progress bar options.
+ * @returns The progress bar.
+ */
 export function progressBar(opts: ProgressOptions) {
   let bar = new ProgressBar(opts);
   addGauge(bar);
