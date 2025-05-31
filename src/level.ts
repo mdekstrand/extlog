@@ -1,6 +1,6 @@
 import { assert } from "@std/assert/assert";
-
-import { colors } from "@cliffy/ansi/colors";
+import * as colors from "@std/fmt/colors";
+import { chainStyles } from "./style.ts";
 
 export type LogLevel = {
   name: string;
@@ -34,25 +34,25 @@ const LEVEL_DEFS: Record<string, Partial<LogLevel>> = {
   info: {
     number: 50,
     tag: "MSG",
-    style: colors.bold.blue,
+    style: chainStyles(colors.bold, colors.blue),
   },
   warning: {
     number: 70,
     tag: "WRN",
-    style: colors.bold.yellow,
+    style: chainStyles(colors.bold, colors.yellow),
     msg_style: colors.yellow,
   },
   error: {
     number: 80,
     tag: "ERR",
-    style: colors.bold.red,
+    style: chainStyles(colors.bold, colors.red),
     msg_style: colors.red,
   },
   critical: {
     number: 100,
     tag: "CRI",
-    style: colors.bold.white.bgRed,
-    msg_style: colors.bold.red,
+    style: chainStyles(colors.bold, colors.white, colors.bgRed),
+    msg_style: chainStyles(colors.bold, colors.red),
   },
 };
 

@@ -34,6 +34,21 @@ export function noStyle(s: string): string {
   return s;
 }
 
+export function chainStyles(...styles: Style[]): Style {
+  if (styles.length == 0) {
+    return noStyle;
+  }
+
+  let [outer, ...inner] = styles;
+
+  if (inner.length) {
+    let chain = chainStyles(...inner);
+    return (s) => outer(chain(s));
+  } else {
+    return outer;
+  }
+}
+
 /**
  * Look up a color style by name.
  * @param color The color name.
