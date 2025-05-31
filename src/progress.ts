@@ -1,16 +1,20 @@
-import { stripAnsiCode } from "@std/fmt/colors";
-
-import { colors } from "@cliffy/ansi/colors";
+/**
+ * Progress bars.
+ *
+ * @module
+ */
+import { gray, stripAnsiCode, white } from "@std/fmt/colors";
 
 import { addGauge } from "./console.ts";
 import { Gauge } from "./gauge.ts";
 import { rootLogger } from "./logger.ts";
 import { MeterBar } from "./meter.ts";
+import { colorByName, type Style, type TermColorName } from "./style.ts";
 
 export type ProgressOptions = {
   label: string;
   total?: number;
-  color?: string | ((s: string) => string);
+  color?: TermColorName | Style;
 };
 
 /**
@@ -29,10 +33,9 @@ export class ProgressBar extends Gauge {
     if (typeof opts.color == "function") {
       this.color = opts.color;
     } else if (typeof opts.color == "string") {
-      // @ts-ignore color lookup
-      this.color = colors[opts.color] ?? colors.white;
+      this.color = colorByName(opts.color);
     } else {
-      this.color = colors.white;
+      this.color = white;
     }
   }
 
@@ -46,7 +49,10 @@ export class ProgressBar extends Gauge {
 
     this.completed += n;
     if (this.completed < 0) {
-      rootLogger.warn("%s: negative update made completed negative, clamping to 0", this.label);
+      rootLogger.warn(
+        "%s: negative update made completed negative, clamping to 0",
+        this.label,
+      );
       this.completed = 0;
     }
     this.emit("refresh");
@@ -69,7 +75,7 @@ export class ProgressBar extends Gauge {
 
     let bar = new MeterBar(size - pfxLen);
     bar.addSegment(this.completed, this.color);
-    bar.addRemaining(this.total, colors.gray);
+    bar.addRemaining(this.total, gray);
 
     return pfx + bar.render();
   }
