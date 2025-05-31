@@ -6,10 +6,28 @@ import { FileLogWriter } from "./logfile.ts";
 import { rootLogger } from "./logger.ts";
 import { ConsoleLogWriter } from "./console.ts";
 
+/**
+ * Options for configuring the logger.
+ */
 export type LogOptions = {
+  /**
+   * The verbosity of the default console logger. 0 is INFO level, and higher
+   * numbers increase verbosity.
+   */
   verbosity?: number;
+  /**
+   * A process name to include in log messages.
+   */
   process?: string;
+  /**
+   * The log file.  If it ends with `.lz4`, it will automatically be compressed
+   * (although incomplete termination of Deno will result in an incomplete and
+   * invalid compressed log file).
+   */
   logFile?: string;
+  /**
+   * The verbosity of the log file.
+   */
   fileVerbosity?: number;
 };
 

@@ -3,13 +3,29 @@ import { TracingContext } from "./context.ts";
 import { levels, LogLevel } from "./level.ts";
 import { LogLabels, makeRecord } from "./record.ts";
 
+/**
+ * Main interface for logging messages.
+ *
+ * Methods are provided for the different log levels.  Log methods accept format
+ * strings like those accepted by `console.log` and friends, including support
+ * for the `%i` and `%I` format specifiers.
+ */
 export class Logger {
-  backend: LogEngine;
+  #engine: LogEngine;
   readonly context?: string;
   readonly name?: string;
 
-  constructor(backend?: LogEngine, labels?: LogLabels) {
-    this.backend = backend ?? logEngineInternal();
+  /**
+   * Construct a new logger.
+   *
+   * Most code should not create `Logger` instances directly — instead, use
+   * {@link rootLogger}, {@link namedLogger}, etc.
+   *
+   * @param engine The log engine.
+   * @param labels Labels to attach to this logger.
+   */
+  constructor(engine?: LogEngine, labels?: LogLabels) {
+    this.#engine = engine ?? logEngineInternal();
     this.context = labels?.context;
     this.name = labels?.name;
   }
@@ -21,7 +37,7 @@ export class Logger {
    * @returns A logger with the specified name.
    */
   named(name: string): Logger {
-    return new Logger(this.backend, { name, context: this.context });
+    return new Logger(this.#engine, { name, context: this.context });
   }
 
   /**
@@ -30,53 +46,87 @@ export class Logger {
    * @returns A logger with the specified tracing context.
    */
   tagged(ctx?: TracingContext): Logger {
-    return new Logger(this.backend, { name: this.name, context: ctx?.tag });
+    return new Logger(this.#engine, { name: this.name, context: ctx?.tag });
   }
 
-  _log(level: LogLevel, msg: string, args: unknown[]): void {
-    if (!this.backend) return;
-    if (!this.backend.wants(level, this.name)) return;
+  /**
+   * Create and write a log message.
+   */
+  private _log(level: LogLevel, msg: string, args: unknown[]): void {
+    if (!this.#engine) return;
+    if (!this.#engine.wants(level, this.name)) return;
     let record = makeRecord(this, level, msg, args);
-    this.backend.writeRecord(record);
+    this.#engine.writeRecord(record);
   }
 
-  xsilly(msg: string, ...args: unknown[]) {
+  /**
+   * Log a tracing message at the extra-silly level.  These are reported as
+   * `SIL`, but require an additional level of verbosity to activate.
+   */
+  xsilly(msg: string, ...args: unknown[]): void {
     this._log(levels.xsilly, msg, args);
   }
 
-  silly(msg: string, ...args: unknown[]) {
+  /**
+   * Log a tracing message at the silly (`SIL`) level.
+   */
+  silly(msg: string, ...args: unknown[]): void {
     this._log(levels.silly, msg, args);
   }
 
-  verbose(msg: string, ...args: unknown[]) {
+  /**
+   * Log a tracing message at the verbose (`VRB`) level.
+   */
+  verbose(msg: string, ...args: unknown[]): void {
     this._log(levels.verbose, msg, args);
   }
 
-  debug(msg: string, ...args: unknown[]) {
+  /**
+   * Log a message at the debug level.
+   */
+  debug(msg: string, ...args: unknown[]): void {
     this._log(levels.debug, msg, args);
   }
 
-  info(msg: string, ...args: unknown[]) {
+  /**
+   * Log a message at the info level.
+   */
+  info(msg: string, ...args: unknown[]): void {
     this._log(levels.info, msg, args);
   }
 
-  msg(msg: string, ...args: unknown[]) {
+  /**
+   * Log a message at the info level (alias).
+   */
+  msg(msg: string, ...args: unknown[]): void {
     this.info(msg, ...args);
   }
 
-  warn(msg: string, ...args: unknown[]) {
+  /**
+   * Log a message at the warning level (alias).
+   */
+  warn(msg: string, ...args: unknown[]): void {
     this.warning(msg, ...args);
   }
 
-  warning(msg: string, ...args: unknown[]) {
+  /**
+   * Log a mesage at the warning level.
+   */
+  warning(msg: string, ...args: unknown[]): void {
     this._log(levels.warning, msg, args);
   }
 
-  error(msg: string, ...args: unknown[]) {
+  /**
+   * Log a message at the error level.
+   */
+  error(msg: string, ...args: unknown[]): void {
     this._log(levels.error, msg, args);
   }
 
-  critical(msg: string, ...args: unknown[]) {
+  /**
+   * Log a message at the critical level.
+   */
+  critical(msg: string, ...args: unknown[]): void {
     this._log(levels.critical, msg, args);
   }
 }
