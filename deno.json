@@ -1,6 +1,6 @@
 {
   "name": "@mdekstrand/extlog",
-  "version": "0.1.0-alpha2",
+  "version": "0.1.0-alpha3",
   "license": "MIT",
   "exports": {
     ".": "./src/mod.ts",
