@@ -3,7 +3,7 @@ import { addGauge, removeGauge } from "./console.ts";
 import { newContext, TracingContext } from "./context.ts";
 import { type Logger, namedLogger, rootLogger } from "./logger.ts";
 import { timingMark } from "./perf.ts";
-import { progressBar } from "./progress.ts";
+import { type ProgressBar, progressBar } from "./progress.ts";
 import { setupLogging } from "./setup.ts";
 
 export {
@@ -17,6 +17,6 @@ export {
   timingMark,
   TracingContext,
 };
-export type { Logger, LogWriter };
+export type { Logger, LogWriter, ProgressBar };
 
 export default rootLogger;
