@@ -14,16 +14,22 @@ export class Logger {
     this.name = labels?.name;
   }
 
-  named(name: string) {
+  /**
+   * Create a new logger defined from this logger with the specified name.
+   *
+   * @param name The logger name.
+   * @returns A logger with the specified name.
+   */
+  named(name: string): Logger {
     return new Logger(this.backend, { name, context: this.context });
   }
 
   /**
-   * Return a new logger derived from this logger with the specified name.
+   * Return a new logger derived from this logger with the specified context.
    * @param ctx The tracing context.
-   * @returns A logger tracing this logger.
+   * @returns A logger with the specified tracing context.
    */
-  tagged(ctx?: TracingContext) {
+  tagged(ctx?: TracingContext): Logger {
     return new Logger(this.backend, { name: this.name, context: ctx?.tag });
   }
 
