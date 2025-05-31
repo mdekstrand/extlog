@@ -1,3 +1,4 @@
+import { LogWriter } from "./backend.ts";
 import { addGauge, removeGauge } from "./console.ts";
 import { newContext, TracingContext } from "./context.ts";
 import { type Logger, namedLogger, rootLogger } from "./logger.ts";
@@ -16,11 +17,6 @@ export {
   timingMark,
   TracingContext,
 };
-export type { Logger };
+export type { Logger, LogWriter };
 
 export default rootLogger;
-/**
- * The root logger.
- * @deprecated Import without `*` or use {@link rootLogger} instead.
- */
-export const log = rootLogger;
