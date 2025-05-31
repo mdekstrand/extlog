@@ -18,6 +18,20 @@
  * 7. SILLY
  * 8. XSILLY (extra silly)
  *
+ * See {@link Logger} for details on log messages.
+ *
+ * Typical usage in a library:
+ *
+ * ```javascript
+ * import log from '@mdekstrand/extlog';
+ *
+ * log.info("hello")
+ * ```
+ *
+ * The command-line entry point should call {@link setupLogging} to initialize
+ * the logging system, and additional {@link setupConsole} if gauges and
+ * progress bars are desired.
+ *
  * @module
  */
 import { LogWriter } from "./writer.ts";
