@@ -3,7 +3,7 @@ import { Closer, writeAllSync, WriterSync } from "@std/io";
 import { parse as parsePath } from "@std/path/parse";
 
 import { LZ4EncoderStream } from "@mdekstrand/streaming-lz4";
-import type { LogWriter } from "./backend.ts";
+import type { LogWriter } from "./writer.ts";
 import { levels, LogLevel, wantedAtOutputLevel } from "./level.ts";
 import { formattedMessage, LogRecord } from "./record.ts";
 

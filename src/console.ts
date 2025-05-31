@@ -3,7 +3,7 @@ import { writeAllSync, WriterSync } from "@std/io";
 
 import { TextAccum } from "./text-accum.ts";
 
-import type { LogWriter } from "./backend.ts";
+import type { LogWriter } from "./writer.ts";
 import { Gauge } from "./gauge.ts";
 import { levels, LogLevel, wantedAtOutputLevel } from "./level.ts";
 import { namedLogger } from "./logger.ts";

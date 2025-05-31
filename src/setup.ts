@@ -1,6 +1,6 @@
 import { assert } from "@std/assert/assert";
 
-import { LogBackend } from "./backend.ts";
+import { LogEngine } from "./engine.ts";
 import { CONSOLE_STDERR } from "./console.ts";
 import { levelForVerbosity } from "./level.ts";
 import { FileLogWriter } from "./logfile.ts";
@@ -16,10 +16,11 @@ export type LogOptions = {
 /**
  * Initialize the logging infrastructure.
  */
-export async function setupLogging(options?: LogOptions) {
+export async function setupLogging(options?: LogOptions): Promise<LogEngine> {
   if (!options) options = {};
   let verbosity = options.verbosity ?? 0;
-  let backend = LogBackend.instance();
+  let engine = new LogEngine();
+  engine.installAsActive();
 
   let console = CONSOLE_STDERR;
   let level = levelForVerbosity(verbosity);
@@ -43,7 +44,7 @@ export async function setupLogging(options?: LogOptions) {
     }
   }
 
-  backend.addWriter(clog);
+  engine.addWriter(clog);
 
   let lf = options.logFile;
   let lf_verbose = undefined;
@@ -64,39 +65,21 @@ export async function setupLogging(options?: LogOptions) {
     }
 
     let file = await FileLogWriter.open(lf, flevel);
-    backend.addWriter(file);
+    engine.addWriter(file);
     rootLogger.info(`writing rootLogger output to ${lf}`);
   }
 
   rootLogger.debug(`logging initialized`);
+
+  return engine;
 }
 
-export async function shutdownLogging(): Promise<void> {
-  let backend = LogBackend.instance();
-  await backend.shutdown();
-}
-
-export interface CLILogOptions {
-  verbose?: number;
-  quiet?: boolean;
-  logFile?: string;
-  logFileLevel?: number;
-}
-
-export async function initLoggingFromCLI(
-  args: CLILogOptions,
-) {
-  let verbosity = 0;
-  if (args.verbose) {
-    verbosity = args.verbose;
-  } else if (args.quiet) {
-    verbosity = -1;
-  } else if (Deno.env.has("ME_LOG_VERBOSE")) {
-    verbosity = Number.parseInt(Deno.env.get("ME_LOG_VERBOSE")!);
+/**
+ * Shut down the logging sytem.
+ */
+export function shutdownLogging(): void {
+  let engine = LogEngine.activeInstance();
+  if (engine) {
+    engine.shutdown();
   }
-  await setupLogging({
-    verbosity,
-    logFile: args.logFile,
-    fileVerbosity: args.logFileLevel ?? verbosity,
-  });
 }
