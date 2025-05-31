@@ -109,7 +109,7 @@ export class ProgressBar extends Gauge {
  * @param opts The progress bar options.
  * @returns The progress bar.
  */
-export function progressBar(opts: ProgressOptions) {
+export function progressBar(opts: ProgressOptions): ProgressBar {
   let bar = new ProgressBar(opts);
   addGauge(bar);
   return bar;
