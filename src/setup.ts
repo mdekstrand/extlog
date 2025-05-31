@@ -1,6 +1,6 @@
 import { assert } from "@std/assert/assert";
 
-import { LogEngine } from "./engine.ts";
+import { LogEngine, logEngineInternal } from "./engine.ts";
 import { CONSOLE_STDERR } from "./console.ts";
 import { levelForVerbosity } from "./level.ts";
 import { FileLogWriter } from "./logfile.ts";
@@ -19,8 +19,7 @@ export type LogOptions = {
 export async function setupLogging(options?: LogOptions): Promise<LogEngine> {
   if (!options) options = {};
   let verbosity = options.verbosity ?? 0;
-  let engine = new LogEngine();
-  engine.installAsActive();
+  let engine = logEngineInternal();
 
   let console = CONSOLE_STDERR;
   let level = levelForVerbosity(verbosity);
@@ -72,14 +71,4 @@ export async function setupLogging(options?: LogOptions): Promise<LogEngine> {
   rootLogger.debug(`logging initialized`);
 
   return engine;
-}
-
-/**
- * Shut down the logging sytem.
- */
-export function shutdownLogging(): void {
-  let engine = LogEngine.activeInstance();
-  if (engine) {
-    engine.shutdown();
-  }
 }

@@ -1,4 +1,4 @@
-import { LogEngine } from "./engine.ts";
+import { LogEngine, logEngineInternal } from "./engine.ts";
 import { TracingContext } from "./context.ts";
 import { levels, LogLevel } from "./level.ts";
 import { LogLabels, makeRecord } from "./record.ts";
@@ -9,7 +9,7 @@ export class Logger {
   readonly name?: string;
 
   constructor(backend?: LogEngine, labels?: LogLabels) {
-    this.backend = backend ?? LogEngine.instance();
+    this.backend = backend ?? logEngineInternal();
     this.context = labels?.context;
     this.name = labels?.name;
   }
