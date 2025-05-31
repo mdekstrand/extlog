@@ -6,7 +6,7 @@
 import { gray, stripAnsiCode, white } from "@std/fmt/colors";
 
 import { addGauge } from "./console.ts";
-import { Gauge } from "./gauge.ts";
+import { Gauge } from "./gauges.ts";
 import { rootLogger } from "./logger.ts";
 import { MeterBar } from "./meter.ts";
 import { colorByName, type Style, type TermColorName } from "./style.ts";

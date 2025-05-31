@@ -2,6 +2,7 @@
  * Interface for “gauges”, display lines at the bottom of the console display.
  */
 import { EventEmitter } from "@mary/events";
+export { addGauge, removeGauge } from "./console.ts";
 
 /**
  * Events emitted by a gauge.

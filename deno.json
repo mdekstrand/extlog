@@ -4,7 +4,7 @@
   "license": "MIT",
   "exports": {
     ".": "./src/mod.ts",
-    "./gauge": "./src/gauge.ts",
+    "./gauges": "./src/gauges.ts",
     "./meter": "./src/meter.ts",
     "./performance": "./src/perf.ts"
   },

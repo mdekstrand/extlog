@@ -5,6 +5,10 @@ const UTF8 = new TextEncoder();
 
 /**
  * Create a new tracing context.
+ *
+ * Tracing contexts support tracing a single action across multiple loggers and
+ * modules.
+ *
  * @returns The context.
  */
 export function newContext(key?: string): TracingContext {
