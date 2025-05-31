@@ -9,106 +9,114 @@ import { levels, LogLevel, wantedAtOutputLevel } from "./level.ts";
 import { namedLogger } from "./logger.ts";
 import { formattedMessage, LogRecord } from "./record.ts";
 import { elapsedMillis, formatDuration } from "./time.ts";
-import {
-  cursorDown,
-  cursorPosition,
-  cursorUp,
-  eraseLine,
-  eraseScreen,
-  restorePosition,
-  savePosition,
-  scrollRegion,
-} from "./ansi.ts";
+import { cursorPosition, eraseScreen, resetScroll, scrollRegion } from "./ansi.ts";
 import { pad } from "./style.ts";
 
 const log = namedLogger("console");
 
-/**
- * Class that manages console displays with progress bars, meters, etc.
- *
- * This class maintains the invariant that the cursor is positioned at the
- * beginning of the blank line above gauges.
- */
-export class ConsoleLogView {
-  private encoder: TextEncoder = new TextEncoder();
-  stream: WriterSync;
-  gauges: Gauge[] = [];
-  active: boolean;
-  colorEnabled = !Deno.noColor;
-  timer?: number;
+let ACTIVE_CONSOLE: ConsoleDisplay | null = null;
+const UTF8 = new TextEncoder();
 
-  constructor(stream: WriterSync & { isTerminal(): boolean }, active: boolean = true) {
-    this.stream = stream;
+type ConsoleOutput = WriterSync & { isTerminal(): boolean };
+
+/**
+ * Class to manage console displays with progress bars, meters, etc.
+ */
+export class ConsoleDisplay {
+  #stream: WriterSync;
+  #gauges: Gauge[] = [];
+  readonly active: boolean;
+  #timer?: number;
+
+  constructor(stream: ConsoleOutput, active: boolean = true) {
+    this.#stream = stream;
     this.active = active;
-    this.colorEnabled &&= stream.isTerminal();
+    ACTIVE_CONSOLE = this;
   }
 
-  static forStream(stream: WriterSync & { isTerminal(): boolean }): ConsoleLogView {
-    return new ConsoleLogView(stream, stream.isTerminal());
+  static forStream(stream: ConsoleOutput): ConsoleDisplay {
+    return new ConsoleDisplay(stream, stream.isTerminal());
+  }
+
+  static active(): ConsoleDisplay | null {
+    return ACTIVE_CONSOLE;
+  }
+
+  [Symbol.dispose]() {
+    this.shutdown();
+  }
+
+  shutdown(): void {
+    let size = Deno.consoleSize();
+    let n = this.#clearGauges();
+    this.write(resetScroll());
+    this.write(cursorPosition(size.rows - n));
   }
 
   addGauge(gauge: Gauge): void {
-    this.clearGauges();
-    this.gauges.push(gauge);
+    this.#clearGauges();
+    this.write("\n");
+    this.#gauges.push(gauge);
     gauge.on("refresh", this.gaugeWantsRefresh.bind(this, gauge));
     gauge.on("finish", this.gaugeFinished.bind(this, gauge));
-    log.verbose("adding gauge (%d total)", this.gauges.length);
-    this.renderGauges();
+    log.verbose("adding gauge (%d total)", this.#gauges.length);
+    this.#renderGauges();
   }
 
   removeGauge(gauge: Gauge): void {
-    this.clearGauges();
-    let n = this.gauges.indexOf(gauge);
+    let oldN = this.#clearGauges();
+    let n = this.#gauges.indexOf(gauge);
     if (n >= 0) {
-      log.verbose("removing gage %d (%d total)", n, this.gauges.length);
-      this.gauges.splice(n, 1);
+      log.verbose("removing gage %d (%d total)", n, this.#gauges.length);
+      this.#gauges.splice(n, 1);
     }
-    this.renderGauges();
+    this.#renderGauges(oldN);
   }
 
   /**
    * Render the gauges.
    */
-  renderGauges() {
-    if (!this.active || !this.gauges.length) {
+  #renderGauges(oldN?: number) {
+    if (!this.active || !this.#gauges.length) {
       return;
     }
 
     let size = Deno.consoleSize();
     this.write(eraseScreen());
 
-    let n = this.gauges.length;
+    let n = this.#gauges.length;
 
     for (let i = 0; i < n; i++) {
-      let gauge = this.gauges[i];
+      let gauge = this.#gauges[i];
       this.write(cursorPosition(size.rows - i));
       this.write(gauge.render(size.columns));
     }
 
     this.write(scrollRegion(1, size.rows - n));
-    this.write(cursorPosition(size.rows - n));
+    this.write(cursorPosition(size.rows - (oldN ?? n)));
   }
 
   /**
    * Clear the gauges from the screen.
    */
-  clearGauges() {
-    if (!this.active || !this.gauges.length) {
-      return;
+  #clearGauges(): number {
+    if (!this.active || !this.#gauges.length) {
+      return 0;
     }
 
     this.write(eraseScreen());
+    return this.#gauges.length;
   }
 
   refresh(option?: "oneshot" | "timer"): void {
-    if (option == "timer" || this.timer == null) {
-      if (this.gauges.length) {
-        this.renderGauges();
+    if (option == "timer" || this.#timer == null) {
+      if (this.#gauges.length) {
+        this.#renderGauges();
         if (option != "oneshot") {
-          this.timer = setTimeout(this.refresh.bind(this, "timer"), 40);
+          this.#timer = setTimeout(this.refresh.bind(this, "timer"), 40);
         }
       } else {
-        delete this.timer;
+        this.#timer = undefined;
       }
     }
   }
@@ -121,43 +129,11 @@ export class ConsoleLogView {
     this.removeGauge(gauge);
   }
 
-  /**
-   * Write text to the console.
-   */
-  writeText(text: string) {
-    if (!this.colorEnabled) {
-      text = colors.stripAnsiCode(text);
-    }
-    this.write(text);
-    if (!text.endsWith("\n")) {
-      this.write("\n");
-    }
-  }
-
-  /**
-   * Construct a log writer.
-   */
-  logWriter(level: LogLevel): ConsoleLogWriter {
-    return new ConsoleLogWriter(this, level);
-  }
-
-  /**
-   * Get a writable stream that properly logs to the console.
-   */
-  get writable(): WritableStream<string> {
-    // create a fresh stream ever time, because we don't actually want locking
-    return new WritableStream({
-      write: async (chunk, _controller) => {
-        await this.writeText(chunk);
-      },
-    });
-  }
-
   private write(data: string | Uint8Array) {
     if (typeof data == "string") {
-      data = this.encoder.encode(data);
+      data = UTF8.encode(data);
     }
-    writeAllSync(this.stream, data);
+    writeAllSync(this.#stream, data);
   }
 }
 
@@ -165,15 +141,17 @@ export class ConsoleLogView {
  * Log writer that writes the console manager.
  */
 export class ConsoleLogWriter implements LogWriter {
-  console: ConsoleLogView;
+  #output: ConsoleOutput;
   level: LogLevel;
   start: Date;
   globalStart?: Date;
+  colorEnabled = !Deno.noColor;
 
-  constructor(console: ConsoleLogView, level: LogLevel) {
-    this.console = console;
+  constructor(level: LogLevel, output?: ConsoleOutput) {
     this.level = level;
     this.start = new Date();
+    this.#output = output ?? Deno.stderr;
+    this.colorEnabled &&= this.#output.isTerminal();
   }
 
   writeRecord(record: LogRecord): void {
@@ -204,23 +182,40 @@ export class ConsoleLogWriter implements LogWriter {
     let msg = formattedMessage(record);
     msg = level.msg_style(msg);
     accum.add(msg);
+    accum.add("\n");
     let text = accum.text;
-    this.console.writeText(text + "\n");
+
+    writeAllSync(this.#output, UTF8.encode(text));
   }
 
   close(): void {
   }
 }
 
-export const CONSOLE_STDERR: ConsoleLogView = ConsoleLogView.forStream(Deno.stderr);
-
-export function consoleWritable(): WritableStream<string> {
-  return CONSOLE_STDERR.writable;
+/**
+ * Activate a logging console to enable gauges and other outputs, if supported.
+ */
+export function setupConsole(): ConsoleDisplay | null {
+  if (ACTIVE_CONSOLE) {
+    throw new Error("logging console already active");
+  }
+  if (Deno.stderr.isTerminal()) {
+    ACTIVE_CONSOLE = new ConsoleDisplay(Deno.stderr);
+    return ACTIVE_CONSOLE;
+  } else {
+    return null;
+  }
 }
 
 export function addGauge(gauge: Gauge): void {
-  CONSOLE_STDERR.addGauge(gauge);
+  let console = ConsoleDisplay.active();
+  if (console) {
+    console.addGauge(gauge);
+  }
 }
 export function removeGauge(gauge: Gauge): void {
-  CONSOLE_STDERR.removeGauge(gauge);
+  let console = ConsoleDisplay.active();
+  if (console) {
+    console.removeGauge(gauge);
+  }
 }

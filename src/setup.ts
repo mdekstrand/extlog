@@ -1,10 +1,10 @@
 import { assert } from "@std/assert/assert";
 
 import { LogEngine, logEngineInternal } from "./engine.ts";
-import { CONSOLE_STDERR } from "./console.ts";
 import { levelForVerbosity } from "./level.ts";
 import { FileLogWriter } from "./logfile.ts";
 import { rootLogger } from "./logger.ts";
+import { ConsoleLogWriter } from "./console.ts";
 
 export type LogOptions = {
   verbosity?: number;
@@ -21,14 +21,13 @@ export async function setupLogging(options?: LogOptions): Promise<LogEngine> {
   let verbosity = options.verbosity ?? 0;
   let engine = logEngineInternal();
 
-  let console = CONSOLE_STDERR;
   let level = levelForVerbosity(verbosity);
   assert(level);
-  let clog = console.logWriter(level);
+  let clog = new ConsoleLogWriter(level);
 
   let fc = Deno.env.get("FORCE_COLOR");
   if (fc && Number.parseInt(fc) > 0) {
-    console.colorEnabled = true;
+    clog.colorEnabled = true;
   }
 
   let marker = Deno.env.get("ME_LOG_STARTMARKER");

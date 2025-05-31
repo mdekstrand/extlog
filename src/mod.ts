@@ -2,7 +2,7 @@
  * Flexible Deno logging library.
  */
 import { LogWriter } from "./writer.ts";
-import { addGauge, consoleWritable, removeGauge } from "./console.ts";
+import { addGauge, removeGauge, setupConsole } from "./console.ts";
 import { newContext, TracingContext } from "./context.ts";
 import { type Logger, namedLogger, rootLogger } from "./logger.ts";
 import { timingMark } from "./perf.ts";
@@ -12,13 +12,13 @@ import { type LogEngine, logEngine } from "./engine.ts";
 
 export {
   addGauge,
-  consoleWritable,
   logEngine,
   namedLogger,
   newContext,
   progressBar,
   removeGauge,
   rootLogger,
+  setupConsole,
   setupLogging,
   timingMark,
   TracingContext,
