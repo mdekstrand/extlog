@@ -1,11 +1,13 @@
 /**
- * Render meter bars.
+ * Utility code to render meters (progress bars, etc.).
+ *
  * @module
  */
 
+import { Style } from "./style.ts";
+
 const FULL_BLOCK = "\u2588";
 
-type Style = (s: string) => string;
 type Segment = {
   size: number;
   style?: Style;

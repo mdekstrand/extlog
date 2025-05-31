@@ -3,7 +3,8 @@
   "version": "0.1.0-alpha1",
   "license": "MIT",
   "exports": {
-    ".": "./src/mod.ts"
+    ".": "./src/mod.ts",
+    "./meter": "./src/meter.ts"
   },
   "imports": {
     "@mary/events": "jsr:@mary/events@^0.2.0",
