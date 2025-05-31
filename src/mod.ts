@@ -4,7 +4,7 @@ import { newContext, TracingContext } from "./context.ts";
 import { type Logger, namedLogger, rootLogger } from "./logger.ts";
 import { timingMark } from "./perf.ts";
 import { type ProgressBar, progressBar } from "./progress.ts";
-import { setupLogging } from "./setup.ts";
+import { type LogOptions, setupLogging } from "./setup.ts";
 import type { LogEngine } from "./engine.ts";
 
 export {
@@ -18,6 +18,6 @@ export {
   timingMark,
   TracingContext,
 };
-export type { LogEngine, Logger, LogWriter, ProgressBar };
+export type { LogEngine, Logger, LogOptions, LogWriter, ProgressBar };
 
 export default rootLogger;
