@@ -75,11 +75,12 @@ export class Logger {
   }
 }
 
-const LOGGERS: Record<string, Logger> = {};
+const ROOT_SYMBOL = Symbol("extlog.root-logger");
+const LOGGERS: Record<symbol | string, Logger> = {};
 /**
  * The root logger.
  */
-export const rootLogger = LOGGERS["##ROOT##"] = new Logger();
+export const rootLogger: Logger = LOGGERS[ROOT_SYMBOL] = new Logger();
 
 /**
  * Create a new named logger.
