@@ -206,6 +206,10 @@ export class ConsoleLogWriter implements LogWriter {
 
 export const CONSOLE_STDERR: ConsoleLogView = ConsoleLogView.forStream(Deno.stderr);
 
+export function consoleWritable(): WritableStream<string> {
+  return CONSOLE_STDERR.writable;
+}
+
 export function addGauge(gauge: Gauge): void {
   CONSOLE_STDERR.addGauge(gauge);
 }
