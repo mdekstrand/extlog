@@ -1,0 +1,11 @@
+{
+  "name": "@mdekstrand/extlog",
+  "version": "0.1.0-alpha1",
+  "exports": {
+    ".": "./mod.ts"
+  },
+  "imports": {
+    "@std/io": "jsr:@std/io@^0.225.2",
+    "@std/path": "jsr:@std/path@^1.0.8"
+  }
+}

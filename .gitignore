@@ -1,0 +1,6 @@
+/target/
+/build/
+/node_modules/
+.envrc
+mise.local.toml
+mise.*.local.toml
