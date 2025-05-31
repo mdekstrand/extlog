@@ -1,19 +1,16 @@
-import { stripAnsiCode } from "@std/fmt/colors";
-import { sprintf } from "@std/fmt/printf";
+import * as colors from "@std/fmt/colors";
 import { writeAllSync, WriterSync } from "@std/io";
 
-import { ansi, AnsiChain } from "@cliffy/ansi";
-import { colors } from "@cliffy/ansi/colors";
-import { differenceInMilliseconds } from "date-fns/differenceInMilliseconds";
-
-import { encodeUtf8 } from "../util/encoding.ts";
-import { TextAccum } from "../util/text-accum.ts";
+import { TextAccum } from "./text-accum.ts";
 
 import type { LogWriter } from "./backend.ts";
 import { Gauge } from "./gauge.ts";
 import { levels, LogLevel, wantedAtOutputLevel } from "./level.ts";
 import { namedLogger } from "./logger.ts";
 import { formattedMessage, LogRecord } from "./record.ts";
+import { elapsedMillis, formatDuration } from "./time.ts";
+import { cursorDown, cursorUp, eraseLine } from "./ansi.ts";
+import { pad } from "./style.ts";
 
 const log = namedLogger("console");
 
@@ -24,6 +21,7 @@ const log = namedLogger("console");
  * beginning of the blank line above gauges.
  */
 export class ConsoleLogView {
+  private encoder: TextEncoder = new TextEncoder();
   stream: WriterSync;
   gauges: Gauge[] = [];
   active: boolean;
@@ -74,7 +72,7 @@ export class ConsoleLogView {
       command += "\r";
       this.write(command);
     }
-    this.write(ansi.cursorUp(this.gauges.length));
+    this.write(cursorUp(this.gauges.length));
   }
 
   /**
@@ -86,10 +84,10 @@ export class ConsoleLogView {
     }
 
     for (let i = 0; i < this.gauges.length; i++) {
-      let cmd = ansi.cursorDown.eraseLine;
+      let cmd = cursorDown() + eraseLine();
       this.write(cmd);
     }
-    this.write(ansi.cursorUp(this.gauges.length));
+    this.write(cursorUp(this.gauges.length));
   }
 
   refresh(option?: "oneshot" | "timer"): void {
@@ -105,11 +103,11 @@ export class ConsoleLogView {
     }
   }
 
-  gaugeWantsRefresh(_gauge: Gauge): void {
+  private gaugeWantsRefresh(_gauge: Gauge): void {
     this.refresh();
   }
 
-  gaugeFinished(gauge: Gauge): void {
+  private gaugeFinished(gauge: Gauge): void {
     this.removeGauge(gauge);
   }
 
@@ -119,7 +117,7 @@ export class ConsoleLogView {
   writeText(text: string) {
     this.clearGauges();
     if (!this.colorEnabled) {
-      text = stripAnsiCode(text);
+      text = colors.stripAnsiCode(text);
     }
     this.write(text);
     if (!text.endsWith("\n")) {
@@ -147,16 +145,17 @@ export class ConsoleLogView {
     });
   }
 
-  private write(data: string | Uint8Array | AnsiChain) {
+  private write(data: string | Uint8Array) {
     if (typeof data == "string") {
-      data = encodeUtf8(data);
-    } else if (!ArrayBuffer.isView(data)) {
-      data = data.bytes();
+      data = this.encoder.encode(data);
     }
     writeAllSync(this.stream, data);
   }
 }
 
+/**
+ * Log writer that writes the console manager.
+ */
 export class ConsoleLogWriter implements LogWriter {
   console: ConsoleLogView;
   level: LogLevel;
@@ -173,9 +172,9 @@ export class ConsoleLogWriter implements LogWriter {
     let level = record.level;
     if (!wantedAtOutputLevel(level, this.level)) return;
     let accum = new TextAccum();
-    let ldstr = formatDuration(differenceInMilliseconds(record.timestamp, this.start));
+    let ldstr = pad(formatDuration(elapsedMillis(record.timestamp, this.start)), 6);
     if (this.globalStart) {
-      let gdstr = formatDuration(differenceInMilliseconds(record.timestamp, this.globalStart), 7);
+      let gdstr = pad(formatDuration(elapsedMillis(record.timestamp, this.globalStart)), 7);
       accum.add(`[${colors.blue(gdstr)} / ${colors.green(ldstr)}]`);
     } else {
       accum.add(`[${colors.green(ldstr)}]`);
@@ -203,22 +202,6 @@ export class ConsoleLogWriter implements LogWriter {
 
   close(): void {
   }
-}
-
-function formatDuration(ms: number, width = 6) {
-  let seconds = ms / 1000;
-  let rfmt;
-  if (seconds > 60) {
-    rfmt = sprintf("%dm%.1fs", Math.floor(seconds / 60), seconds % 60);
-  } else {
-    rfmt = sprintf("%.2fs", seconds);
-  }
-
-  if (rfmt.length < width) {
-    rfmt = " ".repeat(width - rfmt.length) + rfmt;
-  }
-
-  return rfmt;
 }
 
 export const CONSOLE_STDERR: ConsoleLogView = ConsoleLogView.forStream(Deno.stderr);

@@ -1,5 +1,5 @@
 /**
- * Helper functions for terminal styling.
+ * Helper functions for terminal and text styling.
  */
 import * as colors from "@std/fmt/colors";
 
@@ -41,4 +41,13 @@ export function noStyle(s: string): string {
  */
 export function colorByName(color: TermColorName): Style {
   return KNOWN_COLORS[color] ?? colors.white;
+}
+
+export function pad(str: string, width: number): string {
+  let needed = width - str.length;
+  if (needed > 0) {
+    return " ".repeat(needed) + str;
+  } else {
+    return str;
+  }
 }

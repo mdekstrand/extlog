@@ -1,5 +1,6 @@
 /target/
 /build/
+/docs/
 /node_modules/
 .envrc
 mise.local.toml
