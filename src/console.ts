@@ -9,7 +9,16 @@ import { levels, LogLevel, wantedAtOutputLevel } from "./level.ts";
 import { namedLogger } from "./logger.ts";
 import { formattedMessage, LogRecord } from "./record.ts";
 import { elapsedMillis, formatDuration } from "./time.ts";
-import { cursorDown, cursorUp, eraseLine } from "./ansi.ts";
+import {
+  cursorDown,
+  cursorPosition,
+  cursorUp,
+  eraseLine,
+  eraseScreen,
+  restorePosition,
+  savePosition,
+  scrollRegion,
+} from "./ansi.ts";
 import { pad } from "./style.ts";
 
 const log = namedLogger("console");
@@ -66,13 +75,18 @@ export class ConsoleLogView {
     }
 
     let size = Deno.consoleSize();
-    for (let gauge of this.gauges) {
-      let command = "\n";
-      command += gauge.render(size.columns);
-      command += "\r";
-      this.write(command);
+    this.write(eraseScreen());
+
+    let n = this.gauges.length;
+
+    for (let i = 0; i < n; i++) {
+      let gauge = this.gauges[i];
+      this.write(cursorPosition(size.rows - i));
+      this.write(gauge.render(size.columns));
     }
-    this.write(cursorUp(this.gauges.length));
+
+    this.write(scrollRegion(1, size.rows - n));
+    this.write(cursorPosition(size.rows - n));
   }
 
   /**
@@ -83,11 +97,7 @@ export class ConsoleLogView {
       return;
     }
 
-    for (let i = 0; i < this.gauges.length; i++) {
-      let cmd = cursorDown() + eraseLine();
-      this.write(cmd);
-    }
-    this.write(cursorUp(this.gauges.length));
+    this.write(eraseScreen());
   }
 
   refresh(option?: "oneshot" | "timer"): void {
@@ -115,7 +125,6 @@ export class ConsoleLogView {
    * Write text to the console.
    */
   writeText(text: string) {
-    this.clearGauges();
     if (!this.colorEnabled) {
       text = colors.stripAnsiCode(text);
     }
@@ -123,7 +132,6 @@ export class ConsoleLogView {
     if (!text.endsWith("\n")) {
       this.write("\n");
     }
-    this.renderGauges();
   }
 
   /**
