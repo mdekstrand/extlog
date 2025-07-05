@@ -52,7 +52,6 @@ export class ConsoleDisplay {
     let n = this.#clearGauges();
     this.write(resetScroll());
     this.write(cursorPosition(size.rows - n));
-    log.verbose("console shutdown complete");
   }
 
   addGauge(gauge: Gauge): void {
